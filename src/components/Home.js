@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import "../css/Home.css";
+import { axiosClient } from "../api/axiosClient";
 
 const Home = () => {
-  const [colums, setColumns] = useState([]);
-  const [lists, setLists] = useState([]);
+  const [columsTable, setColumnsTable] = useState([]);
+  const [listsUser, setListsUser] = useState([]);
   const navigate = useNavigate();
   function handleClick() {
     navigate("/create");
@@ -13,20 +13,22 @@ const Home = () => {
   const handleEdit = (id) => {
     navigate(`/update/${id}`);
   };
-  const handleDelete = (id) => {
-    const Dialog = window.confirm("Are you sure to delete?");
-    axios.delete(`http://localhost:3000/users/${id}`)
-    .then((res) => {
-      alert("Delete success");
-      navigate(`/delete/${id}`);
-    }).catch((err) => console.log(err));
-  };
-
-  useEffect(() => {
-    axios.get("http://localhost:3000/users").then((res) => {
-      setColumns(Object.keys(res.data[0]));
-      setLists(res.data);
+  const handleGetDetail = () => {
+    axiosClient.get("/users").then((res) => {
+      setColumnsTable(Object.keys(res.data[0]));
+      setListsUser(res.data);
     });
+  };
+  const handleDelete = async (id) => {
+    try {
+      await axiosClient.delete(`/users/${id}`);
+      handleGetDetail();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    handleGetDetail();
   }, []);
 
   return (
@@ -37,21 +39,21 @@ const Home = () => {
       <table className="table">
         <thead>
           <tr>
-            {colums.map((c, index) => (
-              <th key={index}>{c}</th>
+            {columsTable.map((columsTable, index) => (
+              <th key={index}>{columsTable}</th>
             ))}
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {lists.map((l, index) => (
+          {listsUser.map((users, index) => (
             <tr key={index}>
-              <td>{l.id}</td>
-              <td>{l.name}</td>
-              <td>{l.email}</td>
+              <td>{users.id}</td>
+              <td>{users.name}</td>
+              <td>{users.email}</td>
               <td>
-                <button onClick={() => handleEdit(l.id)}>Edit</button>
-                <button onClick={() => handleDelete(l.id)}>Delete</button>
+                <button onClick={() => handleEdit(users.id)}>Update</button>
+                <button onClick={() => handleDelete(users.id)}>Delete</button>
               </td>
             </tr>
           ))}
