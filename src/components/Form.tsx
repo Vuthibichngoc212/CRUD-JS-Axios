@@ -3,12 +3,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import "../css/Form.css";
 import { axiosClient } from "../api/axiosClient";
 
-const Form = ({ mode }) => {
-  const { id } = useParams();
-  const [data, setData] = useState([]);
+interface FormProps {
+  mode: "create" | "update";
+}
+interface UserData {
+  name?: string;
+  email?: string;
+}
+
+const Form: React.FC<FormProps> = ({ mode }) => {
+  const { id } = useParams<{id?: string}>();
+  const [data, setData] = useState<UserData>({});
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (mode === "create") {
@@ -18,7 +26,7 @@ const Form = ({ mode }) => {
       } catch (error) {
         console.log(error);
       }
-    } else if (mode === "update") {
+    } else {
       try {
         await axiosClient.put(`/users/${id}`, data);
         navigate("/");
