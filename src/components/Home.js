@@ -13,7 +13,7 @@ const Home = () => {
   const handleEdit = (id) => {
     navigate(`/update/${id}`);
   };
-  const handleGetDetail = () => {
+  const handleGetAll = () => {
     axiosClient.get("/users").then((res) => {
       setColumnsTable(Object.keys(res.data[0]));
       setListsUser(res.data);
@@ -22,13 +22,13 @@ const Home = () => {
   const handleDelete = async (id) => {
     try {
       await axiosClient.delete(`/users/${id}`);
-      handleGetDetail();
+      handleGetAll();
     } catch (error) {
       console.log(error);
     }
   };
   useEffect(() => {
-    handleGetDetail();
+    handleGetAll();
   }, []);
 
   return (
@@ -39,21 +39,21 @@ const Home = () => {
       <table className="table">
         <thead>
           <tr>
-            {columsTable.map((columsTable, index) => (
-              <th key={index}>{columsTable}</th>
+            {columsTable.map((colum, index) => (
+              <th key={index}>{colum}</th>
             ))}
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {listsUser.map((users, index) => (
+          {listsUser.map((user, index) => (
             <tr key={index}>
-              <td>{users.id}</td>
-              <td>{users.name}</td>
-              <td>{users.email}</td>
+              <td>{user.id}</td>
+              <td>{user.name}</td>
+              <td>{user.email}</td>
               <td>
-                <button onClick={() => handleEdit(users.id)}>Update</button>
-                <button onClick={() => handleDelete(users.id)}>Delete</button>
+                <button onClick={() => handleEdit(user.id)}>Update</button>
+                <button onClick={() => handleDelete(user.id)}>Delete</button>
               </td>
             </tr>
           ))}

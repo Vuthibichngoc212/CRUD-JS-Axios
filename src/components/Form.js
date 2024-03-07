@@ -18,7 +18,7 @@ const Form = ({ mode }) => {
       } catch (error) {
         console.log(error);
       }
-    } else if (mode === "update") {
+    } else {
       try {
         await axiosClient.put(`/users/${id}`, data);
         navigate("/");
