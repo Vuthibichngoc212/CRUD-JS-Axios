@@ -1,43 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { axiosClient } from "../api/axiosClient";
 import "../css/Home.css";
-
-interface IUser {
-  id: number;
-  name: string;
-  email: string;
-}
+import { useDeleteUserMutation, useGetListUsersQuery } from "../api/apiSlice";
 
 export const Home: React.FC = () => {
-  const [columnsTable, setColumnsTable] = useState<string[]>([]);
-  const [listsUser, setListsUser] = useState<IUser[]>([]);
+  const { data } = useGetListUsersQuery();
+  const [deleteUser] = useDeleteUserMutation();
   const navigate = useNavigate();
+  const columnsTable = data && data.length > 0 ? Object.keys(data[0]) : [];
 
   function handleClick() {
     navigate("/create");
   }
-  const handleEdit = (id: number) => {
+  const handleEdit = (id?: string) => {
     navigate(`/update/${id}`);
   };
-  const handleGetAll = () => {
-    axiosClient.get("/users").then((res) => {
-      setColumnsTable(Object.keys(res.data[0]));
-      setListsUser(res.data);
-    });
+  const handleDelete = async (id?: string ) => {
+    await deleteUser(id);
   };
-  const handleDelete = async (id: number) => {
-    try {
-      await axiosClient.delete(`/users/${id}`);
-      handleGetAll();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  
-  useEffect(() => {
-    handleGetAll();
-  }, []);
 
   return (
     <div className="container">
@@ -46,13 +26,13 @@ export const Home: React.FC = () => {
         <thead>
           <tr>
             {columnsTable.map((colum, index) => (
-            <th key={index}>{colum}</th>
-          ))}
+              <th key={index}>{colum}</th>
+            ))}
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {listsUser.map((user, index) => (
+          {data && data.length > 0 && data.map((user, index) => (
             <tr key={index}>
               <td>{user.id}</td>
               <td>{user.name}</td>
