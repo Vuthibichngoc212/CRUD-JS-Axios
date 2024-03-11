@@ -1,53 +1,61 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import "../css/Form.css";
-import { axiosClient } from "../api/axiosClient";
-
-interface FormProps {
-  mode: "create" | "update";
-}
-interface UserData {
-  name?: string;
-  email?: string;
-}
+import {
+  useAddUserMutation,
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+} from "../api/apiSlice";
+import { setUserData } from "../api/formSlice";
+import { RootState } from "../store";
+import { FormProps } from "../interface/form";
 
 const Form: React.FC<FormProps> = ({ mode }) => {
-  const { id } = useParams<{id?: string}>();
-  const [data, setData] = useState<UserData>({});
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [addUser] = useAddUserMutation();
+  const [updateUser] = useUpdateUserMutation();
+  const user = useSelector((state: RootState) => state.formReducer.user);
+
+  const { data: getUserById } = useGetUserByIdQuery(id as string, {
+    skip: mode === "create",
+  });
+  const handleChange = (type: string, value: string) => {
+    dispatch(
+      setUserData({
+        email: type === "email" ? value : user.email,
+        name: type === "name" ? value : user.name,
+      })
+    );
+  };
+
+  useEffect(() => {
+    if (getUserById) {
+      dispatch(
+        setUserData({
+          email: getUserById.email as string,
+          name: getUserById.name as string,
+        })
+      );
+    }
+  }, [getUserById, dispatch]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (mode === "create") {
-      try {
-        await axiosClient.post("/users", data);
-        navigate("/");
-      } catch (error) {
-        console.log(error);
+    try {
+      if (mode === "update" && id) {
+        await updateUser({ id, ...user });
+      } else {
+        await addUser(user);
       }
-    } else {
-      try {
-        await axiosClient.put(`/users/${id}`, data);
-        navigate("/");
-      } catch (error) {
-        console.log(error);
-      }
+      navigate("/");
+    } catch (error) {
+      console.log(error);
     }
   };
-  useEffect(() => {
-    const fetchDataUpdate = async () => {
-      if (mode === "update") {
-        try {
-          const response = await axiosClient.get(`/users/${id}`);
-          setData(response.data);
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    };
-    fetchDataUpdate();
-  }, [id, mode]);
 
   return (
     <div className="container">
@@ -57,8 +65,8 @@ const Form: React.FC<FormProps> = ({ mode }) => {
           <input
             type="text"
             name="name"
-            value={data.name || ""}
-            onChange={(e) => setData({ ...data, name: e.target.value })}
+            value={user.name}
+            onChange={(e) => handleChange("name", e.target.value)}
           />
         </div>
         <div>
@@ -66,8 +74,8 @@ const Form: React.FC<FormProps> = ({ mode }) => {
           <input
             type="email"
             name="email"
-            value={data.email || ""}
-            onChange={(e) => setData({ ...data, email: e.target.value })}
+            value={user.email}
+            onChange={(e) => handleChange("email", e.target.value)}
           />
         </div>
         <button type="submit">Submit</button>
